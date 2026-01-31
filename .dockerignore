@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+
+# Development files
+*.log
+.env
+.env.*
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Simulator (not needed in production)
+genesys_simulator/
+
+# Documentation
+*.md
+!README.md
+
+# Docker files (avoid recursive copy)
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Test files
+*.test.ts
+*.spec.ts
+__tests__/
+
+# OS files
+.DS_Store
+Thumbs.db
