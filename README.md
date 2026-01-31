@@ -85,8 +85,19 @@ gc-audioconnector-voiceagent/
 ├── deploy-azure-container-apps.ps1  # Deployment script (Local Docker + Azure)
 ├── Dockerfile                   # Production Docker image (multi-stage build)
 ├── .env                         # Environment configuration
+├── README_Config_Genesys_Cloud.md   # Genesys Cloud configuration guide ⭐
 └── package.json                 # Node.js dependencies
 ```
+
+---
+
+## 📖 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [README.md](./README.md) | This file - Project overview and deployment |
+| [README_Config_Genesys_Cloud.md](./README_Config_Genesys_Cloud.md) | **Step-by-step guide to configure Genesys Cloud** |
+| [genesys_simulator/README.md](./genesys_simulator/README.md) | Local simulator usage and configuration |
 
 ---
 
