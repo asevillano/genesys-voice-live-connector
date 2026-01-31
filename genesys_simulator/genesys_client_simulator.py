@@ -34,6 +34,7 @@ SAMPLE_RATE = 8000  # Hz - AudioConnector uses 8kHz
 CHANNELS = 1  # Mono
 CHUNK_SIZE = 1600  # 200ms of audio at 8kHz (8000 * 0.2 = 1600 samples)
 AUDIO_DTYPE = np.int16  # 16-bit PCM for capture/playback
+PROMPT_NAME = os.getenv("PROMPT_NAME", "Invoices")
 
 # Session configuration
 ORGANIZATION_ID = os.getenv("SIMULATOR_ORG_ID", str(uuid.uuid4()))
@@ -301,7 +302,7 @@ class GenesysClientSimulator:
             "emailAddress": "test@example.com",
             "storedCardPresent": "false",
             "CURRENT_DATE": datetime.now().strftime("%Y-%m-%d"),
-            "promptName": "NewBookingPrompt"
+            "promptName": PROMPT_NAME #"NewBookingPrompt"
         }
         '''
         # Invoices example input variables
@@ -310,7 +311,7 @@ class GenesysClientSimulator:
             "emailAddress": "test@example.com",
             "AccountID": "false",
             "CURRENT_DATE": datetime.now().strftime("%Y-%m-%d"),
-            "promptName": "Invoices"
+            "promptName": PROMPT_NAME
         }
         
         open_msg = self.protocol.create_open_message(input_vars)

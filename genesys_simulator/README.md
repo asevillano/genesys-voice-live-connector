@@ -1,147 +1,150 @@
 # Genesys Cloud Audio Connector - Client Simulator
 
-Este directorio contiene un simulador de cliente que emula el comportamiento de **Genesys Cloud Audio Connector** para pruebas locales del Voice Agent.
+This directory contains a client simulator that emulates **Genesys Cloud Audio Connector** behavior for local Voice Agent testing.
 
-## 🎯 Propósito
+## 🎯 Purpose
 
-El simulador permite probar el servidor de Voice Agent sin necesidad de:
-- Tener acceso a Genesys Cloud
-- Configurar el Audio Connector real
-- Usar NGrok o desplegar en la nube
+The simulator allows you to test the Voice Agent server without needing to:
+- Have access to Genesys Cloud
+- Configure the real Audio Connector
+- Use NGrok or deploy to the cloud
 
-Es ideal para:
-- **Desarrollo local** - Prueba cambios en prompts y tools sin desplegar
-- **Testing de integración** - Verifica la conexión con Azure Voice Live API
-- **Demostración** - Muestra el agente funcionando sin infraestructura de Genesys
+Ideal for:
+- **Local development** - Test prompt and tool changes without deploying
+- **Integration testing** - Verify connection with Azure Voice Live API
+- **Demonstrations** - Show the agent working without Genesys infrastructure
 
-## 📋 Requisitos
+## 📋 Requirements
 
-- Python 3.9+ (compatible con Python 3.14)
-- Micrófono y altavoces funcionales
-- El servidor `gc-audioconnector-voiceagent` corriendo (local o en Azure Container Apps)
+- Python 3.9+ (compatible with Python 3.14)
+- Working microphone and speakers
+- The `gc-audioconnector-voiceagent` server running (locally or on Azure Container Apps)
 
-## 🚀 Instalación
+## 🚀 Installation
 
 ```powershell
-# 1. Navegar al directorio
+# 1. Navigate to directory
 cd genesys_simulator
 
-# 2. Crear entorno virtual (recomendado)
+# 2. Create virtual environment (recommended)
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
-# 3. Instalar dependencias
+# 3. Install dependencies
 pip install -r requirements.txt
 ```
 
-### Dependencias
+### Dependencies
 
-| Paquete | Versión | Descripción |
+| Package | Version | Description |
 |---------|---------|-------------|
-| `websocket-client` | 1.7.0 | Cliente WebSocket para Python |
-| `sounddevice` | 0.4.6 | Captura y reproducción de audio (compatible con Python 3.14) |
-| `numpy` | >=1.26.0 | Procesamiento de arrays de audio |
-| `python-dotenv` | 1.0.1 | Carga de variables de entorno |
+| `websocket-client` | 1.7.0 | WebSocket client for Python |
+| `sounddevice` | 0.4.6 | Audio capture and playback (Python 3.14 compatible) |
+| `numpy` | >=1.26.0 | Audio array processing |
+| `python-dotenv` | 1.0.1 | Environment variable loading |
 
-## ▶️ Uso
+## ▶️ Usage
 
-### 1. Inicia el servidor AudioConnector
+### 1. Start the AudioConnector server
 
 ```powershell
-# En otra terminal, desde el directorio raíz del proyecto
+# In another terminal, from the project root directory
 npm run start
 ```
 
-### 2. Ejecuta el simulador
+### 2. Run the simulator
 
 ```powershell
-# Activar el entorno virtual
+# Activate virtual environment
 .\.venv\Scripts\Activate.ps1
 
-# Usar URL por defecto (ws://localhost:8081)
+# Use default URL (ws://localhost:8081)
 python genesys_client_simulator.py
 
-# O especificar una URL diferente (local Docker)
+# Or specify a different URL (local Docker)
 python genesys_client_simulator.py ws://localhost:8081
 
-# Conectar a Azure Container Apps
+# Connect to Azure Container Apps
 python genesys_client_simulator.py wss://voice-agent.<region>.azurecontainerapps.io
 ```
 
-### 3. Interactúa con el agente
+### 3. Interact with the agent
 
-- 🎤 El simulador capturará audio de tu micrófono
-- 📤 Enviará el audio al servidor de Voice Agent
-- 📥 Recibirá las respuestas del agente IA
-- 🔊 Reproducirá el audio por los altavoces
-- ⏹️ Presiona `Ctrl+C` para terminar
+- 🎤 The simulator will capture audio from your microphone
+- 📤 Send the audio to the Voice Agent server
+- 📥 Receive AI agent responses
+- 🔊 Play audio through speakers
+- ⏹️ Press `Ctrl+C` to stop
 
-## ⚙️ Configuración
+## ⚙️ Configuration
 
-Puedes configurar el simulador mediante variables de entorno o un archivo `.env`:
+Configure the simulator via environment variables or a `.env` file:
 
 ```env
-# URL del servidor AudioConnector
-# Local (npm run start o Docker)
+# AudioConnector server URL
+# Local (npm run start or Docker)
 SIMULATOR_SERVER_URL=ws://localhost:8081
 
-# Azure Container Apps (usar wss:// para HTTPS)
+# Azure Container Apps (use wss:// for HTTPS)
 # SIMULATOR_SERVER_URL=wss://voice-agent.<region>.azurecontainerapps.io
 
-# IDs de sesión (opcionales, se generan automáticamente)
+# Prompt name to use (available: Invoices, NewBooking)
+PROMPT_NAME=Invoices
+
+# Session IDs (optional, auto-generated)
 SIMULATOR_ORG_ID=your-organization-id
 SIMULATOR_CONV_ID=your-conversation-id
 ```
 
-## 🔧 Parámetros enviados al servidor
+## 🔧 Parameters sent to server
 
-El simulador envía las siguientes variables de entrada (`inputVariables`):
+The simulator sends the following input variables (`inputVariables`):
 
-| Variable | Valor | Descripción |
+| Variable | Value | Description |
 |----------|-------|-------------|
-| `phoneNumber` | +34666123456 | Número de teléfono del usuario |
-| `emailAddress` | test@example.com | Email del usuario |
-| `storedCardPresent` | false | Si hay tarjeta guardada |
-| `CURRENT_DATE` | Fecha actual | Fecha actual para el prompt |
-| `promptName` | Invoices | Nombre del prompt a usar |
+| `phoneNumber` | +34666123456 | User phone number |
+| `emailAddress` | test@example.com | User email |
+| `storedCardPresent` | false | Whether card is stored |
+| `CURRENT_DATE` | Current date | Current date for the prompt |
+| `promptName` | From `PROMPT_NAME` env var | Prompt name to use |
 
-> **Nota:** Para probar el prompt de Invoices con Cosmos DB, asegúrate de que el servidor tiene las variables `COSMOS_*` configuradas.
+> **Note:** To test the Invoices prompt with Cosmos DB, ensure the server has `COSMOS_*` variables configured.
 
-## 📊 Protocolo AudioHook v2
+## 📊 AudioHook v2 Protocol
 
-El simulador implementa el protocolo AudioHook v2 de Genesys:
+The simulator implements the Genesys AudioHook v2 protocol:
 
-### Mensajes del Cliente → Servidor
-| Mensaje | Descripción |
+### Client → Server Messages
+| Message | Description |
 |---------|-------------|
-| `open` | Establece la sesión con parámetros de audio |
-| `ping` | Keep-alive (cada 15 segundos) |
-| `close` | Cierra la sesión |
-| `playback_started` | Indica que comenzó la reproducción de audio |
-| `playback_completed` | Indica que terminó la reproducción |
+| `open` | Establishes session with audio parameters |
+| `ping` | Keep-alive (every 15 seconds) |
+| `close` | Closes the session |
+| `playback_started` | Indicates audio playback started |
+| `playback_completed` | Indicates playback finished |
 
-### Mensajes del Servidor → Cliente
-| Mensaje | Descripción |
+### Server → Client Messages
+| Message | Description |
 |---------|-------------|
-| `opened` | Confirma la sesión establecida |
-| `disconnect` | El servidor cierra la conexión |
-| `pong` | Respuesta al ping |
-| `event` | Eventos (transcripts, barge-in, etc.) |
+| `opened` | Confirms session established |
+| `disconnect` | Server closes connection |
+| `pong` | Response to ping |
+| `event` | Events (transcripts, barge-in, etc.) |
 
-### Formato de Audio
-| Parámetro | Valor |
+### Audio Format
+| Parameter | Value |
 |-----------|-------|
-| **Formato** | PCMU (µ-law) |
+| **Format** | PCMU (µ-law) |
 | **Sample Rate** | 8000 Hz |
-| **Canales** | Mono |
-| **Transmisión** | Binaria vía WebSocket |
+| **Channels** | Mono |
+| **Transmission** | Binary via WebSocket |
 
-## 🔄 Flujo de Comunicación
+## 🔄 Communication Flow
 
 ```
 ┌──────────────┐                    ┌──────────────────┐                    ┌─────────────────┐
-│  Simulador   │                    │    Servidor      │                    │  Azure Voice    │
-│  (Python)    │                    │  AudioConnector  │                    │   Live API      │
+│  Simulator   │                    │    Voice Agent   │                    │  Azure Voice    │
+│  (Python)    │                    │     Server       │                    │   Live API      │
 └──────┬───────┘                    └────────┬─────────┘                    └────────┬────────┘
        │                                     │                                       │
        │──── WebSocket Connect ─────────────▶│                                       │
@@ -164,58 +167,66 @@ El simulador implementa el protocolo AudioHook v2 de Genesys:
        │                                     │                                       │
 ```
 
-## 🐛 Solución de Problemas
+## 🐛 Troubleshooting
 
-### "No se escucha nada"
-1. Verifica que el servidor está corriendo (`npm run start` o Docker)
-2. Verifica que `BOT_PROVIDER=voicelive` en el `.env` del servidor
-3. Revisa los logs del servidor para errores de Azure Voice Live
-4. Verifica que las variables están configuradas:
+### "No audio output"
+1. Verify the server is running (`npm run start` or Docker)
+2. Check that `BOT_PROVIDER=voicelive` in server's `.env`
+3. Review server logs for Azure Voice Live errors
+4. Verify these variables are configured:
    - `AZURE_VOICE_LIVE_ENDPOINT`
    - `AZURE_VOICE_LIVE_API_KEY`
-   - `AZURE_VOICE_LIVE_VOICE` (ej: `es-ES-Ximena:DragonHDLatestNeural`)
+   - `AZURE_VOICE_LIVE_VOICE` (e.g., `es-ES-Ximena:DragonHDLatestNeural`)
 
-### "Error de sounddevice"
+### "sounddevice error"
 ```powershell
-# Reinstalar sounddevice
+# Reinstall sounddevice
 pip uninstall sounddevice
 pip install sounddevice
 ```
 
 ### "Connection refused"
-- Verifica que el servidor está corriendo en el puerto correcto
-- Verifica la URL: `ws://localhost:8081`
-- Comprueba que no hay firewall bloqueando el puerto
+- Verify the server is running on the correct port
+- Check the URL: `ws://localhost:8081`
+- Ensure no firewall is blocking the port
 
 ### "Session not opened"
-- Revisa los logs del servidor para ver errores de autenticación
-- El simulador usa `ApiKey1` que debe coincidir con `SecretService`
+- Check server logs for authentication errors
+- The simulator uses `ApiKey1` which must match `SecretService`
 
-### "Error de Cosmos DB"
-- Verifica que las variables `COSMOS_*` están configuradas en el servidor
-- Revisa los logs: `docker logs -f voice-agent`
-- El prompt Invoices requiere datos en Cosmos DB con campo `TitularDNI`
+### "Cosmos DB error"
+- Verify `COSMOS_*` variables are configured on the server
+- Check logs: `docker logs -f voice-agent`
+- The Invoices prompt requires Cosmos DB data with `TitularDNI` field
 
 ### "Failed to open microphone"
-- Verifica que tu micrófono está conectado y funcionando
-- En Windows, verifica los permisos de micrófono en Configuración > Privacidad
-- Prueba con: `python -c "import sounddevice; print(sounddevice.query_devices())"`
+- Verify your microphone is connected and working
+- On Windows, check microphone permissions in Settings > Privacy
+- Test with: `python -c "import sounddevice; print(sounddevice.query_devices())"`
 
-## 📁 Estructura
+## 📁 Structure
 
 ```
 genesys_simulator/
-├── genesys_client_simulator.py  # Script principal del simulador
-├── requirements.txt             # Dependencias Python
-├── .venv/                       # Entorno virtual (creado por ti)
-└── README.md                    # Este archivo
+├── genesys_client_simulator.py  # Main simulator script
+├── requirements.txt             # Python dependencies
+├── .env                         # Environment configuration
+├── .venv/                       # Virtual environment (created by you)
+└── README.md                    # This file
 ```
 
-## 🛠️ Desarrollo
+## 🛠️ Development
 
-### Modificar las variables de entrada
+### Modify input variables
 
-Edita la función `on_open` en `genesys_client_simulator.py`:
+The simulator reads `PROMPT_NAME` from the environment. To change the prompt:
+
+```env
+# In .env file
+PROMPT_NAME=NewBooking
+```
+
+Or edit the `on_open` function in `genesys_client_simulator.py`:
 
 ```python
 input_vars = {
@@ -223,16 +234,16 @@ input_vars = {
     "emailAddress": "test@example.com",
     "storedCardPresent": "false",
     "CURRENT_DATE": datetime.now().strftime("%Y-%m-%d"),
-    "promptName": "Invoices"  # Opciones: "Invoices", "NewBooking"
+    "promptName": os.getenv("PROMPT_NAME", "Invoices")  # Options: "Invoices", "NewBooking"
 }
 ```
 
-### Cambiar el formato de audio
+### Change audio format
 
-El simulador usa µ-law (PCMU) a 8kHz como requiere el AudioConnector. Si necesitas modificar esto, edita las constantes al inicio del archivo:
+The simulator uses µ-law (PCMU) at 8kHz as required by AudioConnector. To modify this, edit the constants at the beginning of the file:
 
 ```python
 SAMPLE_RATE = 8000  # Hz
 CHANNELS = 1  # Mono
-CHUNK_SIZE = 1600  # 200ms de audio
+CHUNK_SIZE = 1600  # 200ms of audio
 ```
