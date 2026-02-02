@@ -57,15 +57,19 @@ export abstract class VoiceAIAgentBaseClass {
     const fileName = "./src/prompts/" + promptFileName;
     try {
       let fileData = VoiceAIAgentBaseClass.readFile(fileName);
+      
+      // If fileData is an object (JSON was parsed), stringify it first
+      let fileDataStr = typeof fileData === 'string' ? fileData : JSON.stringify(fileData);
+      
       Object.entries(this.session.getInputVariables()).forEach(([key, value]) => {
-        fileData = fileData.replace(`{{${key}}}`, value);
+        fileDataStr = fileDataStr.replace(`{{${key}}}`, value);
       });
 
       const dateTime = new Date();
 
-      fileData = fileData.replace("{{current_date}}", `${dateTime.getFullYear()}-${dateTime.getMonth()}-${dateTime.getDate()}`);
+      fileDataStr = fileDataStr.replace("{{current_date}}", `${dateTime.getFullYear()}-${dateTime.getMonth()}-${dateTime.getDate()}`);
 
-      return fileData;
+      return fileDataStr;
     } catch (error) {
       console.error(new Date().toISOString() + ':' + `[OpenAI] Error reading system message from file ${fileName}:`, error);
       return process.env.DEFAULT_PROMPT_INSTRUCTIONS || 'You are a helpful assistant. Please answer the user\'s questions to the best of your ability.';

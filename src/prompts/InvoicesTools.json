@@ -17,7 +17,12 @@
   {
     "name": "endCall",
     "type": "function",
-    "description": "Terminate the Call with the customer after the customer has confirmed they dont need any further assistance."
+    "description": "Terminate the call. You MUST call this function when the user says goodbye phrases like: 'no gracias', 'nada más', 'eso es todo', 'no necesito nada más', 'nothing else', 'that's all'. First say your farewell, then call this function.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
   },
   {
     "type": "function",

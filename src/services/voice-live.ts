@@ -371,16 +371,19 @@ export class VoiceLiveAgent extends VoiceAIAgentBaseClass {
                 
                 // Handle response done - process function calls
                 if (response.type === 'response.done') {
-                    console.log(new Date().toISOString() + ':' + '[VoiceLive]Response done');
+                    console.log(new Date().toISOString() + ':' + '[VoiceLive]Response done - full response: ' + JSON.stringify(response.response || {}).substring(0, 500));
                     this.session.flushBuffer();
                     
                     // Process function calls
                     if (response.response?.output) {
-                        response.response.output
-                            .filter((out: any) => out.type === 'function_call')
-                            .forEach((funcCall: any) => {
-                                this.handleFunctionCall(funcCall);
-                            });
+                        const functionCalls = response.response.output.filter((out: any) => out.type === 'function_call');
+                        console.log(new Date().toISOString() + ':' + `[VoiceLive]Found ${functionCalls.length} function calls in response.output`);
+                        functionCalls.forEach((funcCall: any) => {
+                            console.log(new Date().toISOString() + ':' + `[VoiceLive]Processing function: ${funcCall.name}`);
+                            this.handleFunctionCall(funcCall);
+                        });
+                    } else {
+                        console.log(new Date().toISOString() + ':' + '[VoiceLive]No output in response');
                     }
                 }
                 
@@ -463,7 +466,18 @@ export class VoiceLiveAgent extends VoiceAIAgentBaseClass {
             responseData.item.output = JSON.stringify({ status: 'ok' });
             this.session.sendDisconnect('completed', args.process || 'transfer', {});
         } else if (funcCall.name === 'endCall') {
-            this.session.sendDisconnect('completed', 'EndCall', {});
+            console.log(new Date().toISOString() + ':' + "[VoiceLive] endCall received - scheduling disconnect after audio plays");
+            
+            // The farewell audio was already sent in the same response (via response.audio.delta)
+            // before this function call was processed. We just need to wait for it to finish playing.
+            // Don't call response.create - we don't want another response from the model.
+            
+            // Wait 3 seconds for farewell audio to finish playing, then disconnect
+            setTimeout(() => {
+                console.log(new Date().toISOString() + ':' + "[VoiceLive] Disconnecting after farewell delay");
+                this.session.sendDisconnect('completed', 'EndCall', {});
+            }, 3000);
+            
             return;
         }
         

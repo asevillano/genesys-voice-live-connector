@@ -215,6 +215,74 @@ genesys_simulator/
 └── README.md                    # This file
 ```
 
+## 📚 Technical References
+
+This simulator was developed based on the following sources:
+
+### 1. Official AudioHook v2 Protocol Documentation
+- [Genesys Cloud AudioConnector Documentation](https://developer.genesys.cloud/devapps/audiohook/)
+- Defines the complete WebSocket protocol: `open`, `opened`, `audio`, `ping/pong`, `close` messages, etc.
+
+### 2. PCMU (µ-law) Audio Specification
+- Audio format follows telephony standard: **8kHz µ-law mono**
+- Encoding/decoding tables (`ULAW_ENCODE_TABLE`, `ULAW_DECODE_TABLE`) follow ITU-T G.711 specification
+
+### 3. Genesys Reference Server
+- The original [AudioConnectorBluePrint](https://github.com/GenesysCloudBlueprints/audioconnector-server-reference-implementation) project provided the message "contract" that the simulator must send
+
+### 4. Protocol Message Flow
+
+```
+┌─────────────────────┐                              ┌─────────────────────┐
+│  Client (Simulator) │                              │       Server        │
+└──────────┬──────────┘                              └──────────┬──────────┘
+           │                                                    │
+           │  ──────────────── open ──────────────────────►     │
+           │                   (with inputVariables)            │
+           │                                                    │
+           │     ◄─────────────── opened ───────────────────    │
+           │                   (confirmation)                   │
+           │                                                    │
+           ├────────────────────────────────────────────────────┤
+           │                  Audio Streaming                   │
+           ├────────────────────────────────────────────────────┤
+           │                                                    │
+           │  ────────────── audio (bytes) ────────────────►    │
+           │                (µ-law 8kHz from mic)               │
+           │                                                    │
+           │     ◄───────────── audio (bytes) ──────────────    │
+           │                (agent response)                    │
+           │                                                    │
+           ├────────────────────────────────────────────────────┤
+           │                    Keep-Alive                      │
+           ├────────────────────────────────────────────────────┤
+           │                                                    │
+           │     ◄──────────────── ping ────────────────────    │
+           │                                                    │
+           │  ──────────────────── pong ────────────────────►   │
+           │                                                    │
+           ├────────────────────────────────────────────────────┤
+           │                   Termination                      │
+           ├────────────────────────────────────────────────────┤
+           │                                                    │
+           │  ─────────────────── close ────────────────────►   │
+           │                   (terminate)                      │
+           │                                                    │
+           │     ◄─────────────── closed ───────────────────    │
+           │                                                    │
+           ▼                                                    ▼
+```
+
+### 5. Libraries Used
+
+| Library | Purpose |
+|---------|---------|
+| `websocket-client` | WebSocket client for Python |
+| `sounddevice` | Audio capture/playback (Python 3.14 compatible) |
+| `numpy` | Audio array processing |
+
+The simulator **exactly replicates** what Genesys Cloud Audio Connector does, allowing you to test the server without real Genesys infrastructure.
+
 ## 🛠️ Development
 
 ### Modify input variables

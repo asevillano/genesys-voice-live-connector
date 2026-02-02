@@ -9,10 +9,10 @@ This repository provides a **Voice AI Agent** implementation that integrates wit
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                              ARCHITECTURE OVERVIEW                                   │
-├─────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                      │
+┌────────────────────────────────────────────────────────────────────────────────────┐
+│                              ARCHITECTURE OVERVIEW                                 │
+├────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                    │
 │   ┌──────────────┐        ┌───────────────────────┐        ┌──────────────────┐    │
 │   │   Genesys    │  WS    │   Voice Agent Server  │   WS   │  Azure Voice     │    │
 │   │    Cloud     │◄──────►│   (Node.js/TS)        │◄──────►│  Live API        │    │
@@ -22,16 +22,16 @@ This repository provides a **Voice AI Agent** implementation that integrates wit
 │          │                │   │ µ-law ↔ PCM16 │   │        │  Voices          │    │
 │          │                │   │ 8kHz ↔ 24kHz  │   │        │  (es-ES-Ximena)  │    │
 │          ▼                │   └───────────────┘   │        └──────────────────┘    │
-│   ┌──────────────┐        │                       │                                 │
+│   ┌──────────────┐        │                       │                                │
 │   │  Caller /    │        │   ┌───────────────┐   │        ┌──────────────────┐    │
 │   │  Simulator   │        │   │ Tool Handlers │   │◄──────►│  Azure Cosmos DB │    │
 │   └──────────────┘        │   │ - getInvoices │   │        │  (Invoices)      │    │
 │                           │   │ - endCall     │   │        └──────────────────┘    │
-│                           │   │ - transfer    │   │                                 │
-│                           │   └───────────────┘   │                                 │
-│                           └───────────────────────┘                                 │
-│                                                                                      │
-└─────────────────────────────────────────────────────────────────────────────────────┘
+│                           │   │ - transfer    │   │                                │
+│                           │   └───────────────┘   │                                │
+│                           └───────────────────────┘                                │
+│                                                                                    │
+└────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Key Components
@@ -52,6 +52,12 @@ The server handles audio format conversion between Genesys and Azure:
 |-----------|---------------|---------------|------------|
 | **Genesys → Azure** | µ-law 8kHz mono | PCM16 24kHz mono | Decode + Upsample (3x) |
 | **Azure → Genesys** | PCM16 24kHz mono | µ-law 8kHz mono | Downsample (3x) + Encode |
+
+> **What is 8kHz µ-law?**
+> - **8kHz** = Sample rate of 8000 samples per second (standard telephony quality)
+> - **µ-law** (mu-law) = Audio compression algorithm that reduces 16-bit samples to 8-bit using a logarithmic scale
+> 
+> This format is the standard in North American and Japanese telephony systems. Genesys Cloud AudioConnector uses this format because it's native to traditional telephony. In contrast, Azure Voice Live API uses **PCM16 24kHz** (uncompressed, higher quality audio), which is why the server must convert between both formats.
 
 ---
 
