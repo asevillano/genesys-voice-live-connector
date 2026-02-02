@@ -6,40 +6,16 @@ This repository provides a **Voice AI Agent** implementation that integrates wit
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture Overview
 
-```
-┌────────────────────────────────────────────────────────────────────────────────────┐
-│                              ARCHITECTURE OVERVIEW                                 │
-├────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                    │
-│   ┌──────────────┐        ┌───────────────────────┐        ┌──────────────────┐    │
-│   │   Genesys    │  WS    │   Voice Agent Server  │   WS   │  Azure Voice     │    │
-│   │    Cloud     │◄──────►│   (Node.js/TS)        │◄──────►│  Live API        │    │
-│   │              │ 8kHz   │                       │ 24kHz  │  (GPT-Realtime)  │    │
-│   │ AudioHook v2 │ µ-law  │   Audio Conversion    │ PCM16  │                  │    │
-│   └──────────────┘        │   ┌───────────────┐   │        │  Azure Speech    │    │
-│          │                │   │ µ-law ↔ PCM16 │   │        │  Voices          │    │
-│          │                │   │ 8kHz ↔ 24kHz  │   │        │  (es-ES-Ximena)  │    │
-│          ▼                │   └───────────────┘   │        └──────────────────┘    │
-│   ┌──────────────┐        │                       │                                │
-│   │  Caller /    │        │   ┌───────────────┐   │        ┌──────────────────┐    │
-│   │  Simulator   │        │   │ Tool Handlers │   │◄──────►│  Azure Cosmos DB │    │
-│   └──────────────┘        │   │ - getInvoices │   │        │  (Invoices)      │    │
-│                           │   │ - endCall     │   │        └──────────────────┘    │
-│                           │   │ - transfer    │   │                                │
-│                           │   └───────────────┘   │                                │
-│                           └───────────────────────┘                                │
-│                                                                                    │
-└────────────────────────────────────────────────────────────────────────────────────┘
-```
+<img src="./high-level-architecture.png" alt="architecture"/>
 
 ### Key Components
 
 | Component | Description |
 |-----------|-------------|
 | **Genesys Cloud AudioConnector** | Streams audio via WebSocket using AudioHook v2 protocol (µ-law 8kHz) |
-| **Voice Agent Server** | Node.js/TypeScript server that bridges AudioConnector with AI backends |
+| **GC-VL-Connector** | Node.js/TypeScript server that bridges AudioConnector with AI backends |
 | **Azure Voice Live API** | Real-time Speech-to-Speech API with GPT-Realtime and Azure Speech voices |
 | **Azure Cosmos DB** | NoSQL database for customer data (invoices, billing info) |
 | **Genesys Cloud Simulator** | Python-based local simulator for testing without Genesys Cloud |
