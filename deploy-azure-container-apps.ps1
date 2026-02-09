@@ -10,7 +10,7 @@ $ENVIRONMENT_NAME = "voice-agent-env"
 $CONTAINER_APP_NAME = "voice-agent"
 $ACR_NAME = "acrvoiceagentmovistar"  # Must be globally unique, lowercase
 $IMAGE_NAME = "voice-agent"
-$IMAGE_TAG = "latest"
+$IMAGE_TAG = "v$(Get-Date -Format 'yyyyMMdd-HHmmss')"  # Unique tag with timestamp
 $LOCAL_PORT = 8081
 $ENV_FILE = ".env"
 
@@ -116,6 +116,8 @@ if ($choice -eq "1") {
 elseif ($choice -eq "2") {
     Write-Host ""
     Write-Host "=== Deploying to Azure Container Apps ===" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Image tag: $IMAGE_TAG" -ForegroundColor Cyan
     Write-Host ""
     
     # Ask if user wants to skip steps
@@ -381,6 +383,15 @@ $envVarsYaml
                 --yaml $yamlFile `
                 --output none
             Test-AzCommandSuccess "Container App update"
+            
+            # Force new revision by updating the image explicitly
+            Write-Host "Forcing new revision with updated image..." -ForegroundColor Cyan
+            az containerapp update `
+                --name $CONTAINER_APP_NAME `
+                --resource-group $RESOURCE_GROUP `
+                --image "${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}" `
+                --output none
+            Test-AzCommandSuccess "Container App image update"
         } else {
             # Create new app using YAML configuration
             Write-Host "Creating Container App from YAML configuration..." -ForegroundColor Gray

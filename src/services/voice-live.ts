@@ -32,6 +32,8 @@ const LOG_EVENT_TYPES = [
     'input_audio_buffer.speech_started',
     'input_audio_buffer.speech_stopped',
     'conversation.item.created',
+    'conversation.item.input_audio_transcription.completed',
+    'response.text.done',
 ];
 
 /**
@@ -352,8 +354,32 @@ export class VoiceLiveAgent extends VoiceAIAgentBaseClass {
                 if (LOG_EVENT_TYPES.includes(response.type)) {
                     console.log(new Date().toISOString() + ':' + `[VoiceLive]Event: ${response.type}`, JSON.stringify(response).substring(0, 500));
                 } else {
-                    console.log(new Date().toISOString() + ':' + `[VoiceLive]Event: ${response.type}`);
+                    // Comentado para reducir ruido en logs (eventos frecuentes como response.audio.delta)
+                    // console.log(new Date().toISOString() + ':' + `[VoiceLive]Event: ${response.type}`);
+                    void 0; // no-op
                 }
+                
+                // === LOGGING ADICIONAL ===
+                // Log user input transcription
+                if (response.type === 'conversation.item.input_audio_transcription.completed') {
+                    const transcript = response.transcript || response.item?.content?.[0]?.transcript || '';
+                    if (transcript) {
+                        console.log(new Date().toISOString() + ':' + `[VoiceLive][USER_INPUT] Transcription: "${transcript}"`);
+                    }
+                }
+                // Log LLM text response from response.done event
+                if (response.type === 'response.done' && response.response?.output) {
+                    response.response.output.forEach((item: any) => {
+                        if (item.content) {
+                            item.content.forEach((c: any) => {
+                                if (c.transcript) {
+                                    console.log(new Date().toISOString() + ':' + `[VoiceLive][LLM_RESPONSE] Text: "${c.transcript}"`);
+                                }
+                            });
+                        }
+                    });
+                }
+                // === FIN LOGGING ADICIONAL ===
                 
                 // Handle session updated - start greeting
                 if (response.type === 'session.updated') {
@@ -363,7 +389,8 @@ export class VoiceLiveAgent extends VoiceAIAgentBaseClass {
                 
                 // Handle audio delta - convert PCM16 24kHz to µ-law 8kHz for AudioConnector
                 if (response.type === 'response.audio.delta' && response.delta) {
-                    console.log(new Date().toISOString() + ':' + '[VoiceLive]Received audio delta');
+                    // Comentado para reducir ruido en logs
+                    // console.log(new Date().toISOString() + ':' + '[VoiceLive]Received audio delta');
                     // Convert PCM16 24kHz to µ-law 8kHz
                     const ulawData = pcm16_24kHzToUlaw(response.delta);
                     this.session.sendAudio(ulawData);
@@ -371,19 +398,16 @@ export class VoiceLiveAgent extends VoiceAIAgentBaseClass {
                 
                 // Handle response done - process function calls
                 if (response.type === 'response.done') {
-                    console.log(new Date().toISOString() + ':' + '[VoiceLive]Response done - full response: ' + JSON.stringify(response.response || {}).substring(0, 500));
+                    console.log(new Date().toISOString() + ':' + '[VoiceLive]Response done');
                     this.session.flushBuffer();
                     
                     // Process function calls
                     if (response.response?.output) {
-                        const functionCalls = response.response.output.filter((out: any) => out.type === 'function_call');
-                        console.log(new Date().toISOString() + ':' + `[VoiceLive]Found ${functionCalls.length} function calls in response.output`);
-                        functionCalls.forEach((funcCall: any) => {
-                            console.log(new Date().toISOString() + ':' + `[VoiceLive]Processing function: ${funcCall.name}`);
-                            this.handleFunctionCall(funcCall);
-                        });
-                    } else {
-                        console.log(new Date().toISOString() + ':' + '[VoiceLive]No output in response');
+                        response.response.output
+                            .filter((out: any) => out.type === 'function_call')
+                            .forEach((funcCall: any) => {
+                                this.handleFunctionCall(funcCall);
+                            });
                     }
                 }
                 
@@ -466,17 +490,18 @@ export class VoiceLiveAgent extends VoiceAIAgentBaseClass {
             responseData.item.output = JSON.stringify({ status: 'ok' });
             this.session.sendDisconnect('completed', args.process || 'transfer', {});
         } else if (funcCall.name === 'endCall') {
-            console.log(new Date().toISOString() + ':' + "[VoiceLive] endCall received - scheduling disconnect after audio plays");
+            console.log(new Date().toISOString() + ':' + "[VoiceLive] endCall received - responding OK and scheduling disconnect");
             
-            // The farewell audio was already sent in the same response (via response.audio.delta)
-            // before this function call was processed. We just need to wait for it to finish playing.
-            // Don't call response.create - we don't want another response from the model.
+            // Respond OK to the function call so the model can generate farewell audio
+            responseData.item.output = JSON.stringify({ status: 'ok' });
+            this.voiceLiveWs.send(JSON.stringify(responseData));
+            this.voiceLiveWs.send(JSON.stringify({ type: 'response.create' }));
             
-            // Wait 3 seconds for farewell audio to finish playing, then disconnect
+            // Wait 8 seconds for farewell audio to be generated and played, then disconnect
             setTimeout(() => {
                 console.log(new Date().toISOString() + ':' + "[VoiceLive] Disconnecting after farewell delay");
                 this.session.sendDisconnect('completed', 'EndCall', {});
-            }, 3000);
+            }, 8000);
             
             return;
         }

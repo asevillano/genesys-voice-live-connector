@@ -1,7 +1,7 @@
 {
-  "contactPhoneNumber": "{{phoneNumber}}",
-  "EmailAddress": "{{emailAddress}}",
-  "AccountID": "{{accountId}}",
+  "phoneNumber": "{{phoneNumber}}",
+  "emailAddress": "{{emailAddress}}",
+  "accountId": "{{accountId}}",
   "CURRENT_DATE": "{{CURRENT_DATE}}",
 
   "identity": {
@@ -112,7 +112,7 @@
         "ALWAYS ask if there is anything else you can help with before ending.",
         "Wait for the customer's response.",
         "If customer says 'Gracias' without saying they're done, ask if they need anything else.",
-        "MANDATORY END CALL: When customer says 'no gracias', 'nada más', 'eso es todo', 'no necesito nada más', 'nothing else' - you MUST in the SAME response: Say 'Gracias por llamar, que tenga un buen día' AND call `endCall`. Do NOT skip calling `endCall`."
+        "MANDATORY END CALL: When customer says 'no gracias', 'nada más', 'eso es todo', 'no necesito nada más', 'nothing else' - you MUST in the SAME response: Say 'Gracias por llamar, que tenga un buen día', do not say 'la llamada ha finalizado correctamente' or anything similar, AND call `endCall`. Do NOT skip calling `endCall`."
       ],
       "examples": [
         "¿Hay algo más en lo que pueda ayudarle hoy?",

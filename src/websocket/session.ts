@@ -67,7 +67,7 @@ export class Session {
         this.ws = ws;
         this.clientSessionId = sessionId;
         this.url = url;
-        console.log(new Date().toISOString()+':'+`[Session]Created a new Session with ID: ${this.clientSessionId}.`);        
+        console.log(new Date().toISOString()+':'+`[Session] Created a new Session with ID: ${this.clientSessionId}.`);        
         this.voiceAIAgentClient = VoiceAIAgentFactory.create(BOT_PROVIDER, this);
         this.paced = new AudioPacedSender(ws,8000,2,2,250);
                 
@@ -81,7 +81,7 @@ export class Session {
             return;
         }
         try {
-            console.log(new Date().toISOString()+':'+`[Session]Closing the WebSocket connection.`);
+            console.log(new Date().toISOString()+':'+`[Session] Closing the WebSocket connection.`);
             this.ws.close();
             this.voiceAIAgentClient?.close();
         } catch (e) {
@@ -108,7 +108,7 @@ export class Session {
     }
     
     playbackCompleted() {
-        console.log(new Date().toISOString()+':'+`[Session]Playback Completed`);
+        console.log(new Date().toISOString()+':'+`[Session] Playback Completed`);
         this.setIsAudioPlaying(false);
         this.voiceAIAgentClient?.processPlaybackCompleted();
     }
@@ -124,11 +124,11 @@ export class Session {
 
         const message = JSON.parse(data);
         if(message['type']=='error' && message['parameters'] ) {
-            console.log(new Date().toISOString()+':'+'[Session]Received Error Message');
+            console.log(new Date().toISOString()+':'+'[Session] Received Error Message');
         }
 
         if (message.seq !== this.lastClientSequenceNumber + 1) {
-            console.log(new Date().toISOString()+':'+`[Session]Invalid client sequence number: ${message.seq}.`);
+            console.log(new Date().toISOString()+':'+`[Session] Invalid client sequence number: ${message.seq}.`);
             this.sendDisconnect('error', 'Invalid client sequence number.', {});
             return;
         }
@@ -136,7 +136,7 @@ export class Session {
         this.lastClientSequenceNumber = message.seq;
 
         if (message.serverseq > this.lastServerSequenceNumber) {
-            console.log(new Date().toISOString()+':'+`[Session]Invalid server sequence number: ${message.serverseq}.`);
+            console.log(new Date().toISOString()+':'+`[Session] Invalid server sequence number: ${message.serverseq}.`);
             this.sendDisconnect('error', 'Invalid server sequence number.', {});
             return;
         }

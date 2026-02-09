@@ -262,6 +262,8 @@ class GenesysClientSimulator:
         
         self.log(f"Connecting to {self.server_url}...")
         self.log(f"Session ID: {self.protocol.session_id}")
+        self.log(f"Organization ID: {self.protocol.organization_id}")
+        self.log(f"Correlation ID: {headers['audiohook-correlation-id']}")
         
         self.ws = websocket.WebSocketApp(
             self.server_url,
@@ -309,7 +311,7 @@ class GenesysClientSimulator:
         input_vars = {
             "phoneNumber": "+34666123456",
             "emailAddress": "test@example.com",
-            "AccountID": "false",
+            "accountId": "false",
             "CURRENT_DATE": datetime.now().strftime("%Y-%m-%d"),
             "promptName": PROMPT_NAME
         }

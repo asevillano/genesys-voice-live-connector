@@ -77,7 +77,9 @@ const LOG_EVENT_TYPES = [
     'input_audio_buffer.committed',
     'input_audio_buffer.speech_stopped',
     'input_audio_buffer.speech_started',
-    'session.created'
+    'session.created',
+    'conversation.item.input_audio_transcription.completed',
+    'response.text.done',
 ];
 
 
@@ -214,6 +216,27 @@ export class OpenAIRealTime extends VoiceAIAgentBaseClass {
                 } else {
                     console.log(new Date().toISOString() + ':' + `[OpenAI]Received event: ${response.type}`);
                 }
+                // === LOGGING ADICIONAL ===
+                // Log user input transcription
+                if (response.type === 'conversation.item.input_audio_transcription.completed') {
+                    const transcript = response.transcript || response.item?.content?.[0]?.transcript || '';
+                    if (transcript) {
+                        console.log(new Date().toISOString() + ':' + `[OpenAI][USER_INPUT] Transcription: "${transcript}"`);
+                    }
+                }
+                // Log LLM text response from response.done event
+                if (response.type === 'response.done' && response.response?.output) {
+                    response.response.output.forEach((item: any) => {
+                        if (item.content) {
+                            item.content.forEach((c: any) => {
+                                if (c.transcript) {
+                                    console.log(new Date().toISOString() + ':' + `[OpenAI][LLM_RESPONSE] Text: "${c.transcript}"`);
+                                }
+                            });
+                        }
+                    });
+                }
+                // === FIN LOGGING ADICIONAL ===
                 if (response.type === 'response.audio.delta' && response.delta) {
                     // media: { payload: Buffer.from(response.delta, 'base64').toString('base64') }
                     // Send Audio
