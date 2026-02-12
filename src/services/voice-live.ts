@@ -216,6 +216,7 @@ export class VoiceLiveAgent extends VoiceAIAgentBaseClass {
     private voiceLiveWs: WebSocket;
     private endpoint: string;
     private pendingFunctionCall: { name: string; call_id: string; arguments?: string } | null = null;
+    private sessionConfigured: boolean = false;
     
     constructor(session: Session) {
         // Validate configuration
@@ -344,7 +345,7 @@ export class VoiceLiveAgent extends VoiceAIAgentBaseClass {
         // Handle WebSocket events
         this.voiceLiveWs.on('open', () => {
             console.log(new Date().toISOString() + ':' + '[VoiceLive]Connected to Voice Live API');
-            setTimeout(initializeSession, 100);
+            // session.update will be sent when session.created is received (see below)
         });
         
         this.voiceLiveWs.on('message', (data: string) => {
@@ -381,9 +382,16 @@ export class VoiceLiveAgent extends VoiceAIAgentBaseClass {
                 }
                 // === FIN LOGGING ADICIONAL ===
                 
-                // Handle session updated - start greeting
+                // Handle session.created - API is ready, now send session.update
+                if (response.type === 'session.created') {
+                    console.log(new Date().toISOString() + ':' + '[VoiceLive]Session created by API - sending session.update');
+                    initializeSession();
+                }
+                
+                // Handle session updated - session is fully configured, start greeting
                 if (response.type === 'session.updated') {
-                    console.log(new Date().toISOString() + ':' + '[VoiceLive]Session configured');
+                    this.sessionConfigured = true;
+                    console.log(new Date().toISOString() + ':' + '[VoiceLive]Session configured - ready for audio');
                     sendInitialGreeting();
                 }
                 
@@ -519,7 +527,7 @@ export class VoiceLiveAgent extends VoiceAIAgentBaseClass {
     }
     
     async processAudio(audioPayload: Uint8Array): Promise<void> {
-        if (this.isAgentConnected()) {
+        if (this.isAgentConnected() && this.sessionConfigured) {
             // Convert µ-law 8kHz to PCM16 24kHz
             const pcm24kHz = ulawToPcm16_24kHz(audioPayload);
             const audioBase64 = pcm24kHz.toString('base64');
