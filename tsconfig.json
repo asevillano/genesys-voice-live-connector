@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-      "rootDir": "src",
+      "rootDir": "src/typescript",
       "outDir": "dist",
       "sourceMap": true,
   
@@ -11,5 +11,7 @@
       "strict": true,
       "esModuleInterop": true,
       "forceConsistentCasingInFileNames": true
-    }
+    },
+    "include": ["src/typescript/**/*"],
+    "exclude": ["node_modules", "dist", "src/python"]
   }

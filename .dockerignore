@@ -1,5 +1,7 @@
 # Dependencies
 node_modules/
+.venv/
+__pycache__/
 
 # Build outputs
 dist/
@@ -28,10 +30,10 @@ docker-compose*
 .dockerignore
 
 # Test files
+tests/
 *.test.ts
 *.spec.ts
-__tests__/
 
-# OS files
-.DS_Store
-Thumbs.db
+# Old/backup files
+OLD/
+_git/

@@ -1,7 +1,35 @@
-node_modules
+# Dependencies
+node_modules/
 .venv/
-.zip
-_git/
+__pycache__/
+
+# Build outputs
+dist/
+
+# Environment files
 .env
-.vscode
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Old/backup files
 OLD/
+*.bak
+_git/
+
+# Zip files
+*.zip
+
+# Python
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/

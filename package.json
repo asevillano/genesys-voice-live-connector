@@ -1,8 +1,8 @@
 {
-    "name": "voice-agent-audio-connector",
+    "name": "genesys-voice-live-connector-typescript",
     "private": true,
-    "version": "0.0.1",
-    "description": "Voice Agent Sample Implementation for AudioConnector Servers.",
+    "version": "1.0.0",
+    "description": "Voice Agent Implementation for Genesys Cloud AudioConnector - TypeScript version",
     "author": "Faisal Yousuf <faisal.yousuf@genesys.com>",
     "main": "./dist/index.js",
     "bin": "./dist/index.js",
@@ -14,9 +14,9 @@
         "node": ">=18"
     },
     "scripts": {
-        "start": "ts-node ./src/index.ts",
+        "start": "ts-node ./src/typescript/index.ts",
         "clean": "rimraf ./dist/",
-        "prebuild": "node -p \"'export const LIB_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/__version.ts",
+        "prebuild": "node -p \"'export const LIB_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/typescript/__version.ts",
         "build": "npm run clean && tsc",
         "test": "echo \"Error: no test specified\" && exit 1"
     },

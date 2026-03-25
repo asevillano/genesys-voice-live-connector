@@ -1,0 +1,3 @@
+@echo off
+echo Starting TypeScript Voice Agent...
+npm run start

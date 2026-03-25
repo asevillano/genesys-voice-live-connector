@@ -1,21 +1,38 @@
-# Voice Agent - Genesys Cloud AudioConnector Integration
+# Genesys Voice Live Connector
 
-This repository provides a **Voice AI Agent** implementation that integrates with **Genesys Cloud Audio Connector** using the **Azure Voice Live API** (Real-time Speech-to-Speech) with **Azure Speech voices**.
+This repository provides **Voice AI Agent** implementations that integrate with **Genesys Cloud Audio Connector** using the **Azure Voice Live API** (Real-time Speech-to-Speech) with **Azure Speech voices**.
 
-> **Note:** This started as a fork of [AudioConnectorBluePrint](https://github.com/GenesysCloudBlueprints/audioconnector-server-reference-implementation) and has been significantly enhanced to support Azure Voice Live API with premium Azure Speech voices and Cosmos DB integration.
+The project includes both **TypeScript** and **Python** implementations with identical functionality.
 
 ---
 
 ## 🏗️ Architecture Overview
 
-<img src="./high-level-architecture.png" alt="architecture"/>
+```
+                    ┌─────────────────┐
+                    │  Genesys Cloud  │
+                    │ AudioConnector  │
+                    └────────┬────────┘
+                             │ WebSocket (µ-law 8kHz)
+                             ▼
+                    ┌─────────────────┐
+                    │  Voice Agent    │
+                    │ (TS or Python)  │
+                    └────────┬────────┘
+                             │ WebSocket (PCM16 24kHz)
+                             ▼
+                    ┌─────────────────┐
+                    │ Azure Voice Live│
+                    │       API       │
+                    └─────────────────┘
+```
 
 ### Key Components
 
 | Component | Description |
 |-----------|-------------|
 | **Genesys Cloud AudioConnector** | Streams audio via WebSocket using AudioHook v2 protocol (µ-law 8kHz) |
-| **GC-VL-Connector** | Node.js/TypeScript server that bridges AudioConnector with AI backends |
+| **Voice Agent (TypeScript/Python)** | Server that bridges AudioConnector with AI backends |
 | **Azure Voice Live API** | Real-time Speech-to-Speech API with GPT-Realtime and Azure Speech voices |
 | **Azure Cosmos DB** | NoSQL database for customer data (invoices, billing info) |
 | **Genesys Cloud Simulator** | Python-based local simulator for testing without Genesys Cloud |
@@ -29,57 +46,52 @@ The server handles audio format conversion between Genesys and Azure:
 | **Genesys → Azure** | µ-law 8kHz mono | PCM16 24kHz mono | Decode + Upsample (3x) |
 | **Azure → Genesys** | PCM16 24kHz mono | µ-law 8kHz mono | Downsample (3x) + Encode |
 
-> **What is 8kHz µ-law?**
-> - **8kHz** = Sample rate of 8000 samples per second (standard telephony quality)
-> - **µ-law** (mu-law) = Audio compression algorithm that reduces 16-bit samples to 8-bit using a logarithmic scale
-> 
-> This format is the standard in North American and Japanese telephony systems. Genesys Cloud AudioConnector uses this format because it's native to traditional telephony. In contrast, Azure Voice Live API uses **PCM16 24kHz** (uncompressed, higher quality audio), which is why the server must convert between both formats.
-
 ---
 
 ## 📁 Project Structure
 
 ```
-gc-audioconnector-voiceagent/
+genesys-voice-live-connector/
 ├── src/
-│   ├── auth/                    # Authentication and signature verification
-│   ├── common/                  # Shared utilities and environment variables
-│   ├── prompts/                 # Prompt templates and tool definitions
-│   │   ├── InvoicesPrompt.md    # Customer service prompt for billing inquiries
-│   │   ├── InvoicesTools.json   # Tool definitions (getInvoices, endCall, transfer)
-│   │   ├── NewBookingPrompt.md  # Travel booking prompt example
-│   │   └── NewBookingTools.json # Booking tool definitions
-│   ├── protocol/                # AudioHook v2 protocol definitions
-│   ├── services/                # Business logic and AI integrations
-│   │   ├── voice-live.ts        # Azure Voice Live API integration ⭐
-│   │   ├── open-ai.ts           # OpenAI Realtime API integration
-│   │   ├── deepgram.ts          # Deepgram Voice Agent integration
-│   │   ├── open-ai-tools.ts     # Tool implementations (Cosmos DB queries)
-│   │   └── voice-aiagent-base.ts # Base class for AI agents
-│   ├── websocket/               # WebSocket server and session management
-│   │   ├── server.ts            # Express + WebSocket server
-│   │   └── session.ts           # Audio session handling with rate limiting
-│   └── index.ts                 # Application entry point
+│   ├── typescript/              # TypeScript implementation
+│   │   ├── auth/                # Authentication and signature verification
+│   │   ├── common/              # Shared utilities and environment variables
+│   │   ├── prompts/             # Prompt templates and tool definitions
+│   │   ├── protocol/            # AudioHook v2 protocol definitions
+│   │   ├── services/            # Business logic and AI integrations
+│   │   ├── websocket/           # WebSocket server and session management
+│   │   └── index.ts             # TypeScript entry point
+│   │
+│   └── python/                  # Python implementation
+│       ├── common/              # Shared utilities and environment variables
+│       ├── prompts/             # Prompt templates and tool definitions
+│       ├── protocol/            # Protocol type definitions
+│       ├── services/            # Business logic and AI integrations
+│       └── websocket/           # WebSocket server and session management
+│
 ├── genesys_simulator/           # Local testing simulator
-│   ├── genesys_client_simulator.py  # Python simulator script
-│   ├── requirements.txt         # Python dependencies
-│   └── README.md                # Simulator documentation
-├── deploy-azure-container-apps.ps1  # Deployment script (Local Docker + Azure)
-├── Dockerfile                   # Production Docker image (multi-stage build)
-├── .env                         # Environment configuration
-├── README_Config_Genesys_Cloud.md   # Genesys Cloud configuration guide ⭐
-└── package.json                 # Node.js dependencies
+│   ├── genesys_client_simulator.py
+│   ├── requirements.txt
+│   └── README.md
+│
+├── main.py                      # Python entry point
+├── package.json                 # Node.js dependencies (TypeScript)
+├── tsconfig.json                # TypeScript configuration
+├── requirements.txt             # Python dependencies
+│
+├── Dockerfile.typescript        # Docker image for TypeScript version
+├── Dockerfile.python            # Docker image for Python version
+│
+├── deploy-typescript.ps1        # Deployment script for TypeScript
+├── deploy-python.ps1            # Deployment script for Python
+│
+├── start-typescript.bat/.sh     # Start scripts for TypeScript
+├── start-python.bat/.sh         # Start scripts for Python
+│
+├── .env.sample                  # Environment variables template
+├── .gitignore                   # Git ignore rules
+└── README.md                    # This file
 ```
-
----
-
-## 📖 Documentation
-
-| Document | Description |
-|----------|-------------|
-| [README.md](./README.md) | This file - Project overview and deployment |
-| [README_Config_Genesys_Cloud.md](./README_Config_Genesys_Cloud.md) | **Step-by-step guide to configure Genesys Cloud** |
-| [genesys_simulator/README.md](./genesys_simulator/README.md) | Local simulator usage and configuration |
 
 ---
 
@@ -104,12 +116,6 @@ COSMOS_KEY=<your-cosmos-key>
 COSMOS_DATABASE_NAME=<database-name>
 COSMOS_CONTAINER_NAME=<container-name>
 
-# ============= Alternative: OpenAI Realtime API =============
-# BOT_PROVIDER=openai
-# OPENAI_MODEL_ENDPOINT=wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview
-# OPENAI_API_KEY=<your-openai-key>
-# OPENAI_VOICE_ID=alloy
-
 # ============= Application Settings =============
 PORT=8081
 NO_INPUT_TIMEOUT=15000
@@ -128,7 +134,9 @@ INITIAL_GREETING=Greet the user warmly
 
 ## 🚀 Running the Solution
 
-### Option 1: Local Development (Without Docker)
+### TypeScript Version
+
+#### Option 1: Local Development (Without Docker)
 
 **Prerequisites:**
 - Node.js 18+
@@ -146,288 +154,116 @@ cp .env.sample .env
 
 # 3. Start the server
 npm run start
+# Or use: start-typescript.bat (Windows) / start-typescript.sh (Linux/Mac)
 
 # Server will be available at ws://localhost:8081
 ```
 
-**Testing with the Simulator:**
+#### Option 2: Docker Deployment
 
 ```bash
-# In a new terminal
-cd genesys_simulator
+# Build and deploy (local or Azure)
+.\deploy-typescript.ps1
+```
 
-# Create virtual environment (Windows)
+---
+
+### Python Version
+
+#### Option 1: Local Development (Without Docker)
+
+**Prerequisites:**
+- Python 3.11+
+- pip
+
+**Steps:**
+
+```bash
+# 1. Create virtual environment
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+source .venv/bin/activate  # Linux/Mac
+.venv\Scripts\activate     # Windows
 
-# Create virtual environment (Linux/Mac)
-# python -m venv .venv && source .venv/bin/activate
-
-# Install dependencies
+# 2. Install dependencies
 pip install -r requirements.txt
 
-# Run simulator
-python genesys_client_simulator.py
+# 3. Configure environment
+cp .env.sample .env
+# Edit .env with your API keys
+
+# 4. Start the server
+python main.py
+# Or use: start-python.bat (Windows) / start-python.sh (Linux/Mac)
+
+# Server will be available at ws://localhost:8081
 ```
 
----
-
-### Option 2: Local Docker Desktop
-
-**Prerequisites:**
-- Docker Desktop installed and running
-
-**Using the Deployment Script:**
-
-```powershell
-# Run the deployment script
-.\deploy-azure-container-apps.ps1
-
-# Select option 1: Local Docker Desktop
-```
-
-**Or manually:**
+#### Option 2: Docker Deployment
 
 ```bash
-# Build the image (--no-cache ensures all changes are applied)
-docker build --no-cache -t voice-agent:latest .
-
-# Run the container
-docker run -d --name voice-agent -p 8081:8081 --env-file .env voice-agent:latest
-
-# Check logs
-docker logs -f voice-agent
-
-# Health check
-curl http://localhost:8081/health
-```
-
-**Testing:**
-```bash
-cd genesys_simulator
-python genesys_client_simulator.py
-# Uses ws://localhost:8081 by default
+# Build and deploy (local or Azure)
+.\deploy-python.ps1
 ```
 
 ---
 
-### Option 3: Azure Container Apps (Production)
+## 🧪 Testing with Genesys Simulator
 
-**Prerequisites:**
-- Azure CLI installed and logged in (`az login`)
-- Docker Desktop running
-- Azure subscription with permissions to create resources
-
-**Deployment Script:**
-
-```powershell
-# Run the deployment script
-.\deploy-azure-container-apps.ps1
-
-# Select option 2: Azure Container Apps
-# Follow the prompts (you can skip completed steps if re-deploying)
-```
-
-**What the script does:**
-
-| Step | Description |
-|------|-------------|
-| 1 | Creates Resource Group (`rg-voice-agent`) |
-| 2 | Creates Azure Container Registry (ACR) |
-| 3 | Builds and pushes Docker image to ACR |
-| 4 | Creates Container Apps Environment |
-| 5 | Prepares environment variables and secrets |
-| 6 | Creates/updates Container App with YAML config |
-| 7 | Retrieves the application URL |
-
-**After Deployment:**
-- WebSocket URL: `wss://<app-name>.<region>.azurecontainerapps.io`
-- Health Check: `https://<app-name>.<region>.azurecontainerapps.io/health`
-
----
-
-## 🧪 Genesys Client Simulator
-
-The `genesys_simulator/` folder contains a Python-based simulator that emulates Genesys Cloud Audio Connector for local testing.
-
-### Features
-- Full AudioHook v2 protocol implementation
-- Real-time microphone capture
-- µ-law encoding/decoding (same as Genesys Cloud)
-- Speaker playback of agent responses
-- Configurable input variables (promptName, phoneNumber, etc.)
-
-### Usage
+The `genesys_simulator/` folder contains a Python-based simulator for testing without a real Genesys Cloud environment.
 
 ```bash
 cd genesys_simulator
-
-# Activate virtual environment
-.\.venv\Scripts\Activate.ps1  # Windows
-# source .venv/bin/activate   # Linux/Mac
-
-# Run with default settings (ws://localhost:8081)
+pip install -r requirements.txt
 python genesys_client_simulator.py
 ```
 
-### Simulator Configuration
-
-Edit `genesys_simulator/.env` or set environment variables:
-
-```bash
-SIMULATOR_SERVER_URL=ws://localhost:8081   # Local
-# SIMULATOR_SERVER_URL=wss://your-app.azurecontainerapps.io  # Azure
-```
-
-For more details, see [`genesys_simulator/README.md`](./genesys_simulator/README.md).
+See [genesys_simulator/README.md](genesys_simulator/README.md) for detailed instructions.
 
 ---
 
-## 🗣️ Creating Custom Prompts
+## 🐳 Docker Images
 
-### 1. Create Prompt File
-
-Create `src/prompts/YourPromptPrompt.md`:
-
-```json
-{
-  "identity": {
-    "name": "Your Agent Name",
-    "languages": ["Spanish", "English"],
-    "description": "Agent description"
-  },
-  "globalRules": [
-    "Rule 1: Be helpful and concise",
-    "Rule 2: Always confirm before taking actions"
-  ],
-  "states": [
-    {
-      "id": "1_intro",
-      "description": "Welcome the user",
-      "instructions": ["Greet warmly", "Ask how to help"],
-      "transitions": [{ "next_step": "2_action", "condition": "User states intent" }]
-    }
-  ]
-}
-```
-
-### 2. Create Tools File
-
-Create `src/prompts/YourPromptTools.json`:
-
-```json
-[
-  {
-    "type": "function",
-    "name": "yourFunction",
-    "description": "What this function does",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "param1": { "type": "string", "description": "Parameter description" }
-      },
-      "required": ["param1"]
-    }
-  },
-  {
-    "type": "function",
-    "name": "endCall",
-    "description": "Terminate the call"
-  },
-  {
-    "type": "function",
-    "name": "transferToAgent",
-    "description": "Transfer to human agent",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "reason": { "type": "string" }
-      }
-    }
-  }
-]
-```
-
-### 3. Implement Tool Handler
-
-In `src/services/voice-live.ts` (or `open-ai.ts`), add your handler in `handleFunctionCall()`:
-
-```typescript
-} else if (funcCall.name === 'yourFunction') {
-    const result = await yourFunctionImplementation(args);
-    responseData.item.output = JSON.stringify(result);
-}
-```
-
-### 4. Pass Prompt Name from Genesys
-
-In your Architect Flow or simulator, pass `promptName` as an input variable:
-```
-promptName = "YourPrompt"
-```
+| Dockerfile | Description | Build Command |
+|------------|-------------|---------------|
+| `Dockerfile.typescript` | Multi-stage build for TypeScript | `docker build -f Dockerfile.typescript -t voice-agent-ts .` |
+| `Dockerfile.python` | Python 3.11 slim image | `docker build -f Dockerfile.python -t voice-agent-py .` |
 
 ---
 
-## 🔧 Useful Commands
+## 📦 Deployment Scripts
 
-### Development
-```bash
-npm run start      # Start with ts-node (development)
-npm run build      # Compile TypeScript to JavaScript
-npm run clean      # Remove dist/ folder
-```
+Both deployment scripts support:
+1. **Local Docker Desktop** - For development and testing
+2. **Azure Container Apps** - For production deployment
 
-### Docker
-```bash
-docker logs -f voice-agent         # Follow logs
-docker exec -it voice-agent sh     # Shell into container
-docker restart voice-agent         # Restart container
-docker rm -f voice-agent           # Remove container
-```
-
-### Azure Container Apps
-```bash
-az containerapp logs show -n voice-agent -g rg-voice-agent --follow
-az containerapp show -n voice-agent -g rg-voice-agent
-az containerapp update -n voice-agent -g rg-voice-agent --min-replicas 2
-```
+| Script | Description |
+|--------|-------------|
+| `deploy-typescript.ps1` | Deploy TypeScript version |
+| `deploy-python.ps1` | Deploy Python version |
 
 ---
 
-## 🧹 Core Classes
+## 🔄 Choosing Between TypeScript and Python
 
-### [`Server`](./src/websocket/server.ts)
+| Aspect | TypeScript | Python |
+|--------|------------|--------|
+| **Performance** | Excellent for I/O-bound operations | Good, with async support |
+| **Ecosystem** | Rich npm packages | Extensive AI/ML libraries |
+| **Docker Image Size** | ~200MB (Node.js slim) | ~150MB (Python slim) |
+| **Development** | Strong typing, better IDE support | Simpler syntax, faster prototyping |
 
-Hosts the Express and WebSocket servers to manage real-time audio connections with Genesys Cloud Audio Connector.
-
-### [`Session`](./src/websocket/session.ts)
-
-Handles communication with the AudioConnector Client (Genesys Cloud). Regulates audio streaming rate to prevent buffer overflows.
-
-### [`VoiceAIAgentBaseClass`](./src/services/voice-aiagent-base.ts)
-
-Base class for all Voice AI Agent platforms. New integrations should inherit from this class.
-
-#### Implementations:
-
-| Class | Description |
-|-------|-------------|
-| [`VoiceLiveAgent`](./src/services/voice-live.ts) | **Azure Voice Live API** - Premium Azure Speech voices (es-ES-Ximena, etc.) ⭐ |
-| [`OpenAIRealTime`](./src/services/open-ai.ts) | OpenAI Realtime API integration |
-| [`DeepgramAIVoiceAgent`](./src/services/deepgram.ts) | Deepgram Voice Agent integration |
+Both implementations are feature-complete and production-ready. Choose based on your team's expertise and existing infrastructure.
 
 ---
 
-## 📚 References
+## 📖 Additional Documentation
 
-- [Genesys AudioConnector Documentation](https://developer.genesys.cloud/devapps/audiohook/)
-- [Azure Voice Live API](https://learn.microsoft.com/azure/ai-services/speech-service/how-to-use-voice-live-api)
-- [Azure Speech Voices](https://learn.microsoft.com/azure/ai-services/speech-service/language-support?tabs=tts)
-- [Azure Cosmos DB](https://learn.microsoft.com/azure/cosmos-db/)
-- [OpenAI Realtime API](https://platform.openai.com/docs/api-reference/realtime)
+| Document | Description |
+|----------|-------------|
+| [genesys_simulator/README.md](genesys_simulator/README.md) | Local simulator usage and configuration |
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - See [LICENSE](LICENSE) file for details.

@@ -1,0 +1,55 @@
+# =============================================================================
+# Dockerfile for Python Voice Agent
+# Azure Container Apps deployment with Voice Live API and Cosmos DB integration
+# =============================================================================
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Create a non-root user for security
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy source code
+COPY main.py .
+COPY src/python ./src/python
+
+# Set ownership
+RUN chown -R appuser:appgroup /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 8081
+
+# =============================================================================
+# Required Environment Variables (set in Azure Container Apps):
+# -----------------------------------------------------------------------------
+# Voice Live API:
+#   AZURE_VOICE_LIVE_ENDPOINT    - Azure AI Services endpoint
+#   AZURE_VOICE_LIVE_API_KEY     - API Key for Voice Live
+#   AZURE_VOICE_LIVE_VOICE       - Voice name (e.g., es-ES-XimenaNeural)
+#   VOICE_LIVE_MODEL             - Model name (e.g., gpt-realtime)
+#
+# Cosmos DB (for invoice queries):
+#   COSMOS_ENDPOINT              - Cosmos DB endpoint URL
+#   COSMOS_KEY                   - Cosmos DB access key
+#   COSMOS_DATABASE_NAME         - Database name
+#   COSMOS_CONTAINER_NAME        - Container name
+#
+# Application:
+#   PORT                         - Server port (default: 8081)
+#   BOT_PROVIDER                 - Provider type (voicelive)
+# =============================================================================
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8081/health')" || exit 1
+
+# Run the application
+CMD ["python", "main.py"]

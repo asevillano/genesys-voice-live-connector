@@ -1,0 +1,3 @@
+@echo off
+echo Starting Python Voice Agent...
+python main.py
